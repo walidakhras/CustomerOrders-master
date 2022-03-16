@@ -53,6 +53,15 @@ public class Order_lines {
      */
     private double unit_sale_price;
 
+    public Order_lines() {}
+
+    public Order_lines(Orders order, Products product, int quantity, double price) {
+        this.setOrder(order);
+        this.setProduct(product);
+        this.setQuantity(quantity);
+        this.setUnit_sale_price(price);
+    }
+
     public Orders getOrder() {
         return order;
     }
