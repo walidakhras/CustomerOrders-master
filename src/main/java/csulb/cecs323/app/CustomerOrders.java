@@ -178,6 +178,12 @@ public class CustomerOrders {
         System.out.println("Completed satisfactorily");
     } // End of the main method
 
+    /**
+     * This function prompts the user to enter a valid customer ID upon a printed list of customers presented.
+     *
+     * @param customers list of customers that persists. Holds all Customers inserted into customers list
+     * @return A single customer chosen via user input
+     */
     public Customers promptCustomers(List<Customers> customers) {
         Scanner in = new Scanner(System.in);
         Customers cust = null;
@@ -197,6 +203,12 @@ public class CustomerOrders {
         return cust;
     }
 
+    /**
+     * This function prompts the user to enter a valid UPC number given a list of products
+     *
+     * @param products The list of products already existing that are stored in the list List
+     * @return A single product chosen via user input
+     */
     public Products promptProducts(List<Products> products) {
         Scanner in = new Scanner(System.in);
         Products prod = null;
@@ -213,6 +225,10 @@ public class CustomerOrders {
         return prod;
     }
 
+    /**
+     * Prompts the user to enter then name of salesperson assisting the transaction
+     * @return Returns a String containing the name of a salesman
+     */
     public String getSalesman() {
         Scanner in = new Scanner(System.in);
         System.out.println("Enter the name of the salesperson processing this sale. ");
