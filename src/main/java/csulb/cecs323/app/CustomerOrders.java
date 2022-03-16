@@ -219,11 +219,25 @@ public class CustomerOrders {
         return in.nextLine();
     }
 
+    /**
+     * Gets the local date and time.
+     *
+     * @return The local date and time when ran.
+     */    
     public LocalDateTime getLocalDateTime() {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("MM/dd/yyy HH:mm:ss");
         return LocalDateTime.now();
     }
-
+    
+    /**
+     * Validates user response for Y/N, to ensure that either "Y" or "N"
+     * was input.
+     *
+     * @param in The scanner used to read input in from the user.
+     * @param res The string input by the user to be validated as
+     *            a response.
+     * @return The validated string.
+     */
     public String validateResponse(Scanner in, String res) {
         if (res.equals("Y") || res.equals("N")) return res;
         while (!res.equals("Y") && !res.equals("N")) {
@@ -233,18 +247,25 @@ public class CustomerOrders {
         return res;
     }
 
+    /**
+     * Displays current customers in database.
+     *
+     */    
     public void printCustomers() {
         for (Customers c : getAllCustomers()) {
             System.out.println(c);
         }
     }
-
+    
+    /**
+     * Displays current products in database.
+     *
+     */
     public void printProducts() {
         for (Products p : getAllProducts()) {
             System.out.println(p);
         }
     }
-
 
     /**
      * Create and persist a list of objects to the database.
@@ -290,6 +311,12 @@ public class CustomerOrders {
          return products.get(0);
       }
    }// End of the getStyle method
+    
+    /**
+     * A method to create and return a list of all products in our database.
+     *
+     * @return A List of all products in out database.
+     */
     public List<Products> getAllProducts() {
         // Run the native query that we defined in the Products entity to find the right style.
         List<Products> products = this.entityManager.createNamedQuery("ReturnProducts",
@@ -301,8 +328,14 @@ public class CustomerOrders {
             // Return the style object that they asked for.
             return products;
         }
+        
     }// End of the getStyle method
-
+    
+    /**
+     * A method to create and return a list of all customers in our database.
+     *
+     * @return A List of all customers in our database.
+     */
     public List<Customers> getAllCustomers() {
         List<Customers> allCustomers = this.entityManager.createNamedQuery("ReturnCustomer",
                 Customers.class).getResultList();
