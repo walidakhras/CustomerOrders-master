@@ -170,7 +170,9 @@ public class CustomerOrders {
                 customerOrders.createEntity(order_lines);
                 abortOrder = true;
             } else {
+                System.out.println("Order not created...");
                 System.out.println("Aborting order...");
+                abortOrder = true;
             }
         }
 
