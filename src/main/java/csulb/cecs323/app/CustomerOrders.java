@@ -162,7 +162,7 @@ public class CustomerOrders {
                 order_lines.add(new Order_lines(custOrder, prod, quantity, price));
                 System.out.println("Product Added");
                 prod.setUnits_in_stock(prod.getUnits_in_stock() - quantity);
-            }
+            } else { System.out.println("Order successfully aborted"); }
 
             System.out.println("Add another product to the order? (Y/N)");
             String ans = in.nextLine();
@@ -176,15 +176,12 @@ public class CustomerOrders {
         customerOrders.createEntity(order_lines);
         tx.commit();
         System.out.println("Completed satisfactorily");
-    }
+    } // End of the main method
 
-
-    // End of the main method
 
     public LocalDateTime getLocalDateTime() {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("MM/dd/yyy HH:mm:ss");
         return LocalDateTime.now();
-
     }
 
     public String validateResponse(Scanner in, String res) {
