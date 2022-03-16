@@ -15,11 +15,13 @@ package csulb.cecs323.app;
 // Import all of the entity classes that we have written for this application.
 
 import csulb.cecs323.model.*;
+import org.eclipse.persistence.exceptions.DatabaseException;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
+import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -80,6 +82,7 @@ public class CustomerOrders {
         EntityManager manager = factory.createEntityManager();
         // Create an instance of CustomerOrders and store our new EntityManager as an instance variable.
         CustomerOrders customerOrders = new CustomerOrders(manager);
+        final DecimalFormat df = new DecimalFormat("0.00");
 
 
         // Any changes to the database need to be done within a transaction.
@@ -114,42 +117,26 @@ public class CustomerOrders {
         LOGGER.fine("End of Transaction");
 
         Scanner in = new Scanner(System.in);
-        List<Customers> custs = customerOrders.getAllCustomers();
 
-        String identity = "test";
-        customerOrders.printCustomers();
-        System.out.println("Please your customer ID");
+        String identity = customerOrders.getSalesman();
 
-        long ID = in.nextLong();
-        Customers cust = customers.stream()
-                .filter(c -> ID == (c.getCustomer_id()))
-                .findAny()
-                .orElse(null);
-        assert cust != null;
+        Customers cust = customerOrders.promptCustomers(customers);
+        Orders custOrder = new Orders(cust, customerOrders.getLocalDateTime(), identity);
 
         boolean continueShopping = true;
         Scanner i = new Scanner(System.in);
-        Orders custOrder = new Orders(cust, customerOrders.getLocalDateTime(), identity);
-
+        double totalPrice = 0;
         while (continueShopping) {
-            System.out.println("Please enter the UPC of the product you would like to purchase.");
-            customerOrders.printProducts();
-            String targetUPC = i.nextLine();
-            Products prod = products.stream()
-                    .filter(p -> targetUPC.equals(p.getUPC()))
-                    .findAny()
-                    .orElse(null);
-
+            Products prod = customerOrders.promptProducts(products);
             System.out.println(prod);
-            System.out.println("Please enter the quantity of this product you would like to purchase. ");
 
+            System.out.println("Please enter the quantity of this product you would like to purchase. ");
             int quantity = i.nextInt();
             while (quantity > prod.getUnits_in_stock()) {
                 System.out.println("Quantity of " + quantity + " not available for " + prod.getProd_name());
                 System.out.println("Please enter a valid value: ");
                 quantity = i.nextInt();
             }
-
 
             orders.add(custOrder);
             double price = prod.getUnit_list_price() * quantity;
@@ -161,8 +148,9 @@ public class CustomerOrders {
             if (res.equals("Y")) {
                 order_lines.add(new Order_lines(custOrder, prod, quantity, price));
                 System.out.println("Product Added");
+                totalPrice += price;
                 prod.setUnits_in_stock(prod.getUnits_in_stock() - quantity);
-            } else { System.out.println("Order successfully aborted"); }
+            } else { System.out.println("Order successfully aborted. You may add more products, or exit. "); }
 
             System.out.println("Add another product to the order? (Y/N)");
             String ans = in.nextLine();
@@ -170,14 +158,66 @@ public class CustomerOrders {
             if (ans.equals("N")) continueShopping = false;
         } //Finished shopping
 
+        boolean abortOrder = false;
+        while (!abortOrder) {
+            System.out.println("Are you sure you want to purchase this order? (Y/N)");
+            String abortAns = i.nextLine();
+            abortAns = customerOrders.validateResponse(in, abortAns);
+            if (abortAns.equals("Y")) {
+                System.out.println("Total price: " + df.format(totalPrice));
+                System.out.println("Purchasing");
+                customerOrders.createEntity(orders);
+                customerOrders.createEntity(order_lines);
+                abortOrder = true;
+            } else {
+                System.out.println("Aborting order...");
+            }
+        }
 
-        System.out.println("Purchasing");
-        customerOrders.createEntity(orders);
-        customerOrders.createEntity(order_lines);
         tx.commit();
         System.out.println("Completed satisfactorily");
     } // End of the main method
 
+    public Customers promptCustomers(List<Customers> customers) {
+        Scanner in = new Scanner(System.in);
+        Customers cust = null;
+
+        while (cust == null) {
+            System.out.println("Please enter a customer ID from the list below.");
+            printCustomers();
+            long ID = in.nextLong();
+            // Code citation: I got the code below for easily finding an element in an arraylist
+            // From an object attribute from this site:
+            // https://www.baeldung.com/find-list-element-java
+            cust = customers.stream()
+                    .filter(c -> ID == (c.getCustomer_id()))
+                    .findAny()
+                    .orElse(null);
+        }
+        return cust;
+    }
+
+    public Products promptProducts(List<Products> products) {
+        Scanner in = new Scanner(System.in);
+        Products prod = null;
+
+        while(prod == null) {
+            System.out.println("Please enter the UPC of the product you would like to purchase.");
+            printProducts();
+            String targetUPC = in.nextLine();
+            prod = products.stream()
+                    .filter(p -> targetUPC.equals(p.getUPC()))
+                    .findAny()
+                    .orElse(null);
+        }
+        return prod;
+    }
+
+    public String getSalesman() {
+        Scanner in = new Scanner(System.in);
+        System.out.println("Enter the name of the salesperson processing this sale. ");
+        return in.nextLine();
+    }
 
     public LocalDateTime getLocalDateTime() {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("MM/dd/yyy HH:mm:ss");
@@ -238,21 +278,21 @@ public class CustomerOrders {
      *
      * @return The Products instance corresponding to that UPC.
      */
-//   public Products getProduct(String UPC) {
-//      // Run the native query that we defined in the Products entity to find the right style.
-//      List<Products> products = this.entityManager.createNamedQuery("ReturnProduct",
-//              Products.class).setParameter(1, UPC).getResultList();
-//      if (products.size() == 0) {
-//         // Invalid style name passed in.
-//         return null;
-//      } else {
-//         // Return the style object that they asked for.
-//         return products.get(0);
-//      }
-//   }// End of the getStyle method
+   public Products getProduct(String UPC) {
+      // Run the native query that we defined in the Products entity to find the right style.
+      List<Products> products = this.entityManager.createNamedQuery("ReturnProduct",
+              Products.class).setParameter(1, UPC).getResultList();
+      if (products.size() == 0) {
+         // Invalid style name passed in.
+         return null;
+      } else {
+         // Return the style object that they asked for.
+         return products.get(0);
+      }
+   }// End of the getStyle method
     public List<Products> getAllProducts() {
         // Run the native query that we defined in the Products entity to find the right style.
-        List<Products> products = this.entityManager.createNamedQuery("ReturnProduct",
+        List<Products> products = this.entityManager.createNamedQuery("ReturnProducts",
                 Products.class).getResultList();
         if (products.size() == 0) {
             // Invalid style name passed in.
