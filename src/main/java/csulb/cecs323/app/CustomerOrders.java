@@ -113,7 +113,7 @@ public class CustomerOrders {
         customerOrders.createEntity(customers);
 
         // Commit the changes so that the new data persists and is visible to other users.
-//      tx.commit();
+      tx.commit();
         LOGGER.fine("End of Transaction");
 
         Scanner in = new Scanner(System.in);
@@ -166,8 +166,10 @@ public class CustomerOrders {
             if (abortAns.equals("Y")) {
                 System.out.println("Total price: " + df.format(totalPrice));
                 System.out.println("Purchasing");
+                tx.begin();
                 customerOrders.createEntity(orders);
                 customerOrders.createEntity(order_lines);
+                tx.commit();
                 abortOrder = true;
             } else {
                 System.out.println("Order not created...");
@@ -176,7 +178,7 @@ public class CustomerOrders {
             }
         }
 
-        tx.commit();
+//        tx.commit();
         System.out.println("Completed satisfactorily");
     } // End of the main method
 
